@@ -1,10 +1,11 @@
 import axios from "axios";
 import React from "react";
+import useUser from "../hooks/useUser";
 
 const AddCommentFrom = ({ articleName, onArticleUpdated }) => {
     // const [name, setName] = React.useState('')
     // const [commentText, setCommentText] = React.useState('')
-
+    const { user } = useUser();
     const [commentFormData, setCommentFormData] = React.useState(
         {
             name: "",
@@ -24,10 +25,12 @@ const AddCommentFrom = ({ articleName, onArticleUpdated }) => {
     }
 
     const addComment = async () => {
+        const token = user && await user.getIdToken();
+        const headers = token ? {authtoken: token} : {}
         const response = await axios.post(`/api/articles/${articleName}/postComment`, {
             postedBy: commentFormData.name,
             text: commentFormData.commentText
-        })
+        }, { headers })
         const updatedArticle = response.data
         onArticleUpdated(updatedArticle)
         setCommentFormData({
@@ -41,25 +44,14 @@ const AddCommentFrom = ({ articleName, onArticleUpdated }) => {
             <h3>
                 Add a Comment
             </h3>
-            <label>
-                Name:
-                <input 
-                    name="name"
-                    value={commentFormData.name}
-                    onChange={handleChange}
-                    type="text" 
-                />
-            </label>
-            <label>
-                Comment:
-                <textarea   
-                    rows="4" 
-                    cols="50" 
-                    name="commentText"
-                    value={commentFormData.commentText}
-                    onChange={handleChange}
-                />
-            </label>
+            { user && <p>You are posting as {user.email}</p> }
+            <textarea   
+                rows="4" 
+                cols="50" 
+                name="commentText"
+                value={commentFormData.commentText}
+                onChange={handleChange}
+            />
             <button onClick={addComment}>Add Comment</button>
         </div>
     )
